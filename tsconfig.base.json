@@ -21,6 +21,9 @@
       ],
       "@angular-architecture-patterns/core/endpoint": [
         "libs/core/endpoint/src/index.ts"
+      ],
+      "@angular-architecture-patterns/core/mock": [
+        "libs/core/mock/src/index.ts"
       ]
     }
   },
