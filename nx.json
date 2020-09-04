@@ -28,6 +28,9 @@
     "angular-architecture-patterns-e2e": {
       "tags": [],
       "implicitDependencies": ["angular-architecture-patterns"]
+    },
+    "core-window": {
+      "tags": []
     }
   }
 }
