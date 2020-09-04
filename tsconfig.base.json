@@ -18,6 +18,9 @@
     "paths": {
       "@angular-architecture-patterns/core/window": [
         "libs/core/window/src/index.ts"
+      ],
+      "@angular-architecture-patterns/core/endpoint": [
+        "libs/core/endpoint/src/index.ts"
       ]
     }
   },

@@ -163,6 +163,38 @@
           "style": "scss"
         }
       }
+    },
+    "core-endpoint": {
+      "projectType": "library",
+      "root": "libs/core/endpoint",
+      "sourceRoot": "libs/core/endpoint/src",
+      "prefix": "app",
+      "architect": {
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/core/endpoint/tsconfig.lib.json",
+              "libs/core/endpoint/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/core/endpoint/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/core/endpoint/jest.config.js",
+            "tsConfig": "libs/core/endpoint/tsconfig.spec.json",
+            "passWithNoTests": true,
+            "setupFile": "libs/core/endpoint/src/test-setup.ts"
+          }
+        }
+      },
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss"
+        }
+      }
     }
   },
   "cli": {
