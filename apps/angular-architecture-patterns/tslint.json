@@ -1,0 +1,20 @@
+{
+  "extends": "../../tslint.json",
+  "rules": {
+    "directive-selector": [
+      true,
+      "attribute",
+      "angularArchitecturePatterns",
+      "camelCase"
+    ],
+    "component-selector": [
+      true,
+      "element",
+      "angular-architecture-patterns",
+      "kebab-case"
+    ]
+  },
+  "linterOptions": {
+    "exclude": ["!**/*"]
+  }
+}
