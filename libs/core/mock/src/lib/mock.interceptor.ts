@@ -11,8 +11,7 @@ import { Inject, Injectable } from '@angular/core';
 import { from, Observable, of } from 'rxjs';
 import { map, reduce, switchMap } from 'rxjs/operators';
 
-import { EndpointFacadeService } from '@angular-architecture-patterns/core/endpoint';
-
+import { EndpointFacadeService } from './endpoint-facade.service';
 import { MOCK_CONFIG, MOCK_DATA, IMockConfig } from './const.tokens';
 import { IMockUrl } from './mock.models';
 

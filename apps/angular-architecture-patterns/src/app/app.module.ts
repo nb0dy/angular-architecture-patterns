@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { WindowModule } from '@angular-architecture-patterns/core/window';
-import { EndpointModule } from '@angular-architecture-patterns/core/endpoint';
+import { EndpointFacadeService, EndpointModule } from '@angular-architecture-patterns/core/endpoint';
 import { MockModule } from '@angular-architecture-patterns/core/mock';
 
 import { AppComponent } from './app.component';
@@ -20,7 +20,7 @@ const mockConfig = {
     HttpClientModule,
     WindowModule.forRoot(),
     EndpointModule.forRoot(),
-    MockModule.forRoot(mockConfig, navigationMockData),
+    MockModule.forRoot(mockConfig, navigationMockData, EndpointFacadeService),
   ],
   providers: [],
   bootstrap: [AppComponent],
