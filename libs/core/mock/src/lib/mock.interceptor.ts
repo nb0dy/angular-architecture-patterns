@@ -11,9 +11,9 @@ import { Inject, Injectable } from '@angular/core';
 import { from, Observable, of } from 'rxjs';
 import { map, reduce, switchMap } from 'rxjs/operators';
 
-import { EndpointFacadeService } from './endpoint-facade.service';
 import { MOCK_CONFIG, MOCK_DATA, IMockConfig } from './const.tokens';
 import { IMockUrl } from './mock.models';
+import { ENDPOINT_FACADE_SERVICE, IEndpointFacadeService } from './service.tokens';
 
 interface IHttpMockResponseSuccess {
   body: any;
@@ -28,7 +28,7 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
   public constructor(
     @Inject(MOCK_CONFIG) private httpClientMockConfig: IMockConfig,
     @Inject(MOCK_DATA) private mockedData: IMockUrl[],
-    private endpointService: EndpointFacadeService
+    @Inject(ENDPOINT_FACADE_SERVICE) private endpointService: IEndpointFacadeService,
   ) {}
 
   public intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {

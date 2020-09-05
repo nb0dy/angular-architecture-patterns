@@ -1,15 +1,16 @@
 import { HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 
-import { BrowserWindowRef as WindowRef } from './browser-window.service';
+
+import { IWindowRefService, WINDOW_REF_SERVICE } from './service.tokens';
 import { getFullUrl, replaceParams } from './utils';
 
 @Injectable()
 export class EndpointService {
   private readonly baseDomain: string;
 
-  public constructor(private windowRefService: WindowRef) {
+  public constructor(@Inject(WINDOW_REF_SERVICE) private windowRefService: IWindowRefService) {
     const windowRef = (this.windowRefService.nativeWindow || { location: { origin: '' }}) as Window;
     this.baseDomain = windowRef.location.origin;
   }
