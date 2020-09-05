@@ -1,5 +1,7 @@
 import {
+  HTTP_INTERCEPTORS,
   HttpEvent,
+  HttpEventType,
   HttpHandler,
   HttpHeaders,
   HttpInterceptor,
@@ -7,13 +9,15 @@ import {
   HttpRequest,
   HttpResponse,
 } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable, Injector } from '@angular/core';
 import { from, Observable, of } from 'rxjs';
-import { map, reduce, switchMap } from 'rxjs/operators';
+import { concatMap, map, reduce, switchMap } from 'rxjs/operators';
 
-import { MOCK_CONFIG, MOCK_DATA, IMockConfig } from './const.tokens';
-import { IMockUrl } from './mock.models';
-import { ENDPOINT_FACADE_SERVICE, IEndpointFacadeService } from './service.tokens';
+import { IMockConfig, MOCK_CONFIG, MOCK_DATA } from './const.tokens';
+import { HttpInterceptorHandler } from './handlers/http-interceptor.handler';
+import { HttpClientNoon } from './http-client-noon';
+import { HttpRequestEvent } from './http-request.event';
+import { IMockUrl, } from './mock.models';
 
 interface IHttpMockResponseSuccess {
   body: any;
@@ -25,22 +29,25 @@ interface IHttpMockResponseSuccess {
 
 @Injectable()
 export class HttpClientInterceptorMock implements HttpInterceptor {
+  private interceptorHandler: HttpHandler | null = null;
+
   public constructor(
+    private injector: Injector,
+    private httpClientNoon: HttpClientNoon,
     @Inject(MOCK_CONFIG) private httpClientMockConfig: IMockConfig,
-    @Inject(MOCK_DATA) private mockedData: IMockUrl[],
-    @Inject(ENDPOINT_FACADE_SERVICE) private endpointService: IEndpointFacadeService,
+    @Inject(MOCK_DATA) private mockedData: IMockUrl[]
   ) {}
 
   public intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const { url, method, params } = request;
-
     if (!this.httpClientMockConfig.useMocks) {
       return next.handle(request);
     }
 
-    return this.endpointService.getUrl(url, params).pipe(
-      switchMap(requestUrl => this.getMockData(requestUrl, method)),
-      switchMap(data => this.handleResponse(request, next, data))
+    this.setHandlers();
+
+    return this.createRequest(request.method, request.url, request.params).pipe(
+      switchMap((req): Observable<IMockUrl> => this.getMockData(req.url, req.method)),
+      switchMap((data): Observable<HttpEvent<any>> => this.handleResponse(request, next, data))
     );
   }
 
@@ -53,10 +60,10 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
       return next.handle(request);
     }
 
-    return this.createResponse(data, request.headers);
+    return this.createSuccessResponse(data, request.headers);
   };
 
-  private createResponse = (
+  private createSuccessResponse = (
     data: IMockUrl,
     headers: HttpHeaders
   ): Observable<HttpEvent<IHttpMockResponseSuccess>> => {
@@ -74,16 +81,17 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
 
   private getMockData = (url: string, method: string): Observable<IMockUrl> => {
     return from(this.mockedData).pipe(
-      switchMap(data => {
-        return this.endpointService.getUrl(data.url, this.getMockParams(data.params)).pipe(
-          map(mockUrl => {
-            return { ...data, url: mockUrl };
-          })
+      switchMap(
+        (data): Observable<IMockUrl> =>
+          this.createRequest(method, data.url, this.getMockParams(data.params)).pipe(
+            map((req): IMockUrl => ({ ...data, url: req.url, params: req.params }))
+          )
+      ),
+      reduce((acc, val): IMockUrl[] => [...acc, val], []),
+      map((data: IMockUrl[]): IMockUrl | null => {
+        return data.find(
+          (item): boolean => item.url === url && item.method === method
         );
-      }),
-      reduce((acc, val) => [...acc, val], []),
-      map((data: IMockUrl[]) => {
-        return data.find(item => item.url === url && item.method === method);
       })
     );
   };
@@ -98,5 +106,34 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
     }
 
     return new HttpParams({ fromObject: params });
+  };
+
+  private createRequest = (method: string, url: string, params: HttpParams): Observable<HttpRequest<any>> => {
+    const request = new HttpRequest(method, url, { params });
+
+    return of(request).pipe(
+      concatMap((req): Observable<HttpEvent<any>> => this.interceptorHandler.handle(req)),
+      map((response: HttpRequestEvent): HttpRequest<any> => this.getRequestFromEvent(response, request))
+    );
+  };
+
+  private getRequestFromEvent = (response: HttpRequestEvent, request: HttpRequest<any>): HttpRequest<any> => {
+    if (response.type === HttpEventType.User && response.request) {
+      return response.request;
+    }
+
+    return request;
+  };
+
+  private setHandlers = (): void => {
+    if (this.interceptorHandler === null) {
+      const interceptors = this.injector.get(HTTP_INTERCEPTORS, []);
+      this.interceptorHandler = interceptors
+        .filter((interceptor): boolean => interceptor !== this)
+        .reduceRight(
+          (next, interceptor): HttpInterceptorHandler => new HttpInterceptorHandler(next, interceptor),
+          this.httpClientNoon
+        );
+    }
   };
 }
