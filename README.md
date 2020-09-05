@@ -22,7 +22,9 @@ Run `git checkout v1.1.0` to switch to decoupled modules version.
 
 Run `git checkout v1.2.0` to switch to decoupled modules using interfaces version.
 
-Run `git checkout v1.3.0` to switch to extensible decoupled modules version.
+Run `git checkout v1.3.0` to switch to independent modules version.
+
+Run `git checkout v1.4.0` to switch to extensible independent modules version.
 
 ## Understand your workspace
 

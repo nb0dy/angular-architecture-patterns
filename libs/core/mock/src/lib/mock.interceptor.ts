@@ -13,11 +13,16 @@ import { Inject, Injectable, Injector } from '@angular/core';
 import { from, Observable, of } from 'rxjs';
 import { concatMap, map, reduce, switchMap } from 'rxjs/operators';
 
-import { IMockConfig, MOCK_CONFIG, MOCK_DATA } from './const.tokens';
+import { IMockConfig, MOCK_CONFIG, MOCK_DATA, MOCK_REQUEST_PARSERS } from './const.tokens';
 import { HttpInterceptorHandler } from './handlers/http-interceptor.handler';
+import { MockRequestHandler } from './handlers/mock-request.handler';
 import { HttpClientNoon } from './http-client-noon';
 import { HttpRequestEvent } from './http-request.event';
-import { IMockUrl, } from './mock.models';
+import {
+  IMockRequestHandler,
+  IMockRequestParser,
+  IMockUrl,
+} from './mock.models';
 
 interface IHttpMockResponseSuccess {
   body: any;
@@ -30,12 +35,14 @@ interface IHttpMockResponseSuccess {
 @Injectable()
 export class HttpClientInterceptorMock implements HttpInterceptor {
   private interceptorHandler: HttpHandler | null = null;
+  private requestHandler: IMockRequestHandler | null = null;
 
   public constructor(
     private injector: Injector,
     private httpClientNoon: HttpClientNoon,
     @Inject(MOCK_CONFIG) private httpClientMockConfig: IMockConfig,
-    @Inject(MOCK_DATA) private mockedData: IMockUrl[]
+    @Inject(MOCK_DATA) private mockedData: IMockUrl[],
+    @Inject(MOCK_REQUEST_PARSERS) private mockRequestParsers: IMockRequestParser[]
   ) {}
 
   public intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -112,6 +119,8 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
     const request = new HttpRequest(method, url, { params });
 
     return of(request).pipe(
+      concatMap((req): Observable<HttpEvent<HttpRequestEvent>> => this.requestHandler.handle(req)),
+      map((response: HttpRequestEvent): HttpRequest<any> => this.getRequestFromEvent(response, request)),
       concatMap((req): Observable<HttpEvent<any>> => this.interceptorHandler.handle(req)),
       map((response: HttpRequestEvent): HttpRequest<any> => this.getRequestFromEvent(response, request))
     );
@@ -134,6 +143,14 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
           (next, interceptor): HttpInterceptorHandler => new HttpInterceptorHandler(next, interceptor),
           this.httpClientNoon
         );
+    }
+
+    if (this.requestHandler === null) {
+      const requestParsers = this.mockRequestParsers || [];
+      this.requestHandler = requestParsers.reduceRight(
+        (next, parser): IMockRequestHandler => new MockRequestHandler(next, parser),
+        this.httpClientNoon
+      );
     }
   };
 }
