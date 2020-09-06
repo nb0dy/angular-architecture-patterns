@@ -8,6 +8,7 @@ import { MockModule } from '@angular-architecture-patterns/core/mock';
 
 import { AppComponent } from './app.component';
 import { data as navigationMockData } from './navigation.mock';
+import { EndpointMockParser } from './endpoint-mock.parser';
 
 const mockConfig = {
   useMocks: true,
@@ -20,9 +21,9 @@ const mockConfig = {
     HttpClientModule,
     WindowModule.forRoot(),
     EndpointModule.forRoot(WindowRef),
-    MockModule.forRoot(mockConfig, navigationMockData),
+    MockModule.forRoot(mockConfig, navigationMockData, [EndpointMockParser]),
   ],
-  providers: [],
+  providers: [EndpointMockParser],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

@@ -26,6 +26,8 @@ Run `git checkout v1.3.0` to switch to independent modules version.
 
 Run `git checkout v1.4.0` to switch to extensible independent modules version.
 
+Run `git checkout v1.5.0` to switch to extensible independent modules version without apply interceptors feature.
+
 ## Understand your workspace
 
 Run `nx dep-graph` to see a diagram of the dependencies of your projects.

@@ -1,5 +1,4 @@
 import {
-  HTTP_INTERCEPTORS,
   HttpEvent,
   HttpEventType,
   HttpHandler,
@@ -7,14 +6,13 @@ import {
   HttpInterceptor,
   HttpParams,
   HttpRequest,
-  HttpResponse,
+  HttpResponse
 } from '@angular/common/http';
 import { Inject, Injectable, Injector } from '@angular/core';
 import { from, Observable, of } from 'rxjs';
 import { concatMap, map, reduce, switchMap } from 'rxjs/operators';
 
 import { IMockConfig, MOCK_CONFIG, MOCK_DATA, MOCK_REQUEST_PARSERS } from './const.tokens';
-import { HttpInterceptorHandler } from './handlers/http-interceptor.handler';
 import { MockRequestHandler } from './handlers/mock-request.handler';
 import { HttpClientNoon } from './http-client-noon';
 import { HttpRequestEvent } from './http-request.event';
@@ -34,7 +32,6 @@ interface IHttpMockResponseSuccess {
 
 @Injectable()
 export class HttpClientInterceptorMock implements HttpInterceptor {
-  private interceptorHandler: HttpHandler | null = null;
   private requestHandler: IMockRequestHandler | null = null;
 
   public constructor(
@@ -120,8 +117,6 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
 
     return of(request).pipe(
       concatMap((req): Observable<HttpEvent<HttpRequestEvent>> => this.requestHandler.handle(req)),
-      map((response: HttpRequestEvent): HttpRequest<any> => this.getRequestFromEvent(response, request)),
-      concatMap((req): Observable<HttpEvent<any>> => this.interceptorHandler.handle(req)),
       map((response: HttpRequestEvent): HttpRequest<any> => this.getRequestFromEvent(response, request))
     );
   };
@@ -135,16 +130,6 @@ export class HttpClientInterceptorMock implements HttpInterceptor {
   };
 
   private setHandlers = (): void => {
-    if (this.interceptorHandler === null) {
-      const interceptors = this.injector.get(HTTP_INTERCEPTORS, []);
-      this.interceptorHandler = interceptors
-        .filter((interceptor): boolean => interceptor !== this)
-        .reduceRight(
-          (next, interceptor): HttpInterceptorHandler => new HttpInterceptorHandler(next, interceptor),
-          this.httpClientNoon
-        );
-    }
-
     if (this.requestHandler === null) {
       const requestParsers = this.mockRequestParsers || [];
       this.requestHandler = requestParsers.reduceRight(
